@@ -1,0 +1,45 @@
+version: "2.1"
+services:
+  jobmanager:
+    image: flink:1.12.2-scala_2.12
+    ports:
+      - "8081:8081"
+    command: jobmanager
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager        
+
+  taskmanager:
+    image: flink:1.12.2-scala_2.12
+    depends_on:
+      - jobmanager
+    command: taskmanager
+    scale: 1
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        taskmanager.numberOfTaskSlots: 4   
+  mysql:
+    image: mysql:5.7
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
+    command: [
+          'mysqld',
+          '--innodb-buffer-pool-size=80M',
+          '--character-set-server=utf8mb4',
+          '--collation-server=utf8mb4_unicode_ci',
+          '--default-time-zone=+8:00',
+          '--lower-case-table-names=1',
+          '--skip-name-resolve'
+        ]
+    environment:
+      MYSQL_USER: "sql-demo"
+      MYSQL_PASSWORD: "demo-sql"
+      MYSQL_DATABASE: "sql-demo"
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+
